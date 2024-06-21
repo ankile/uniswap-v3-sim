@@ -1,4 +1,4 @@
-*.ipynb
+# *.ipynb
 .ipynb_checkpoints/
 v3/data/factory_pool_created/
 v3/data/pool_initialize_events
