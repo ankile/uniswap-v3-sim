@@ -1,6 +1,8 @@
 import polars as pl
 import requests
 
+from ipdb import set_trace as bp
+
 
 class allium:
     def __init__(self, allium_query_id, allium_api_key):
@@ -205,14 +207,21 @@ class allium:
             headers={"X-API-Key": self.allium_api_key},
             timeout=240,
         )
-        
+
+        print(q)
+
+        # bp()
+
         response_json = response.json()
 
         data = response_json.get("data")
 
         if not data:
-            raise Exception(f"No data returned from Allium query {q}, query response: {response_json}")
-        
+            return None
+            # raise Exception(
+            #     f"No data returned from Allium query {q}, query response: {response_json}"
+            # )
+
         # polars from dict
         df = pl.DataFrame(data)
 
@@ -232,8 +241,6 @@ class allium:
             )
 
         if len(df) >= 200_000:
-            raise Exception(
-                "Please fetch at most 200,000 rows at a time"
-            )
+            raise Exception("Please fetch at most 200,000 rows at a time")
 
         return df

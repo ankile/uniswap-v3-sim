@@ -1,10 +1,13 @@
 import polars as pl
 import os
 from datetime import date, timedelta, datetime, timezone
-from .connectors import allium, gbq
+from .connectors import allium, gbq, Connector
 from .test_helpers import *
 from pathlib import Path
 import json
+
+from ipdb import set_trace as bp
+
 
 # data updating
 def checkPath(data_type, data_path):
@@ -57,7 +60,9 @@ def writeDataset(df, table, data_path, max_block_of_segment, min_block_of_segmen
     )
 
 
-def readRemote(table, connector, max_block_of_segment, min_block_of_segment, chain):
+def readRemote(
+    table, connector: allium, max_block_of_segment, min_block_of_segment, chain
+):
     """
     Read the raw dataframe from remote
     """
@@ -196,6 +201,10 @@ def _update_tables(pool, tables=[], test_mode=False):
             )
 
             # save it down
+            if df is None:
+                print(f"No more data to pull for {table}")
+                break
+
             writeDataset(
                 df,
                 table,
@@ -252,7 +261,7 @@ def _update_tables(pool, tables=[], test_mode=False):
                 writeDataset(df, table, pool.data_path, 0, 0)
 
             # this moves the iteration, we pulled all of block n, so we want to start at n+1
-            min_block_of_segment = df.select('block_number').max().item() + 1
+            min_block_of_segment = df.select("block_number").max().item() + 1
 
             if test_mode:
                 break
@@ -266,20 +275,29 @@ def update_tables(pool, update_from, tables=[], test_mode=False):
         gcp_locked = True
         try:
             from google.cloud import bigquery
+
             gcp_locked = False
         except ImportError:
-            raise Exception("GCP could not be imported. If you want to use another source (such as allium), set update_from to the desired source e.g. 'allium'")
-        
+            raise Exception(
+                "GCP could not be imported. If you want to use another source (such as allium), set update_from to the desired source e.g. 'allium'"
+            )
+
         pool.connector = gbq()
         _update_tables(pool, tables, test_mode)
 
     elif update_from == "allium":
-        assert pool.tgt_max_rows <= 200_000, "Attempting to pull too many rows (>200k), set tgt_max_rows to less than 100k rows"
+        assert (
+            pool.tgt_max_rows <= 200_000
+        ), "Attempting to pull too many rows (>200k), set tgt_max_rows to less than 100k rows"
 
         allium_query_id = os.getenv("ALLIUM_POLARSV3_QUERY_ID")
         allium_api_key = os.getenv("ALLIUM_POLARSV3_API_KEY")
 
-        assert allium_query_id and allium_api_key, "Please set ALLIUM_POLARSV3_QUERY_ID and ALLIUM_POLARSV3_API_KEY environment variables"
+        # bp()
+
+        assert (
+            allium_query_id and allium_api_key
+        ), "Please set ALLIUM_POLARSV3_QUERY_ID and ALLIUM_POLARSV3_API_KEY environment variables"
 
         pool.connector = allium(allium_query_id, allium_api_key)
         _update_tables(pool, tables, test_mode)
