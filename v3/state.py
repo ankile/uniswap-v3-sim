@@ -1,8 +1,11 @@
-from .helpers import *
-import polars as pl
+import os
 from pathlib import Path
 
-PACKAGEDIR = Path(__file__).parent.absolute()
+import polars as pl
+
+from .helpers import *
+
+PACKAGEDIR = os.environ.get("V3_POLARS_PATH", Path(__file__).parent.absolute())
 
 
 class v3Pool:
@@ -50,6 +53,7 @@ class v3Pool:
         # data checkers
         self.path = str(Path(f"{PACKAGEDIR}/data").resolve())
         self.data_path = str(Path(f"{PACKAGEDIR}/data").resolve())
+        print("Using data path", self.data_path)
         checkPath("", self.data_path)
 
         # we strip the "uniswap_v3_factory"
