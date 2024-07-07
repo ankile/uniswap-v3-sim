@@ -169,7 +169,7 @@ class v3Pool:
 
                 return df
 
-    def calcSwapDF(self, as_of):
+    def calcSwapDF(self, as_of, given_price=False):
         """
         @inherit from pool_helpers.createSwapDF
         Helper function that calculates and caches swapDFs
@@ -182,7 +182,7 @@ class v3Pool:
         if self.cache["as_of"] == as_of:
             return self.cache["swapDF"], self.cache["inRangeValues"]
 
-        as_of, df, inRangeValues = createSwapDF(as_of, self)
+        as_of, df, inRangeValues = createSwapDF(as_of, self, given_price=given_price)
 
         self.cache["as_of"] = as_of
         self.cache["swapDF"] = df

@@ -60,7 +60,7 @@ def dtToBN(dt, pool):
     return bn_as_of
 
 
-def createSwapDF(as_of, pool):
+def createSwapDF(as_of, pool, given_price=None):
     """
     This creates the swap data from that pre-computes most of the values
     needed to simulate a swap
@@ -71,7 +71,7 @@ def createSwapDF(as_of, pool):
     it then pre-computes the amounts needed to escape out of the current
     range as well
     """
-    price = pool.getPriceAt(as_of)
+    price = pool.getPriceAt(as_of) if given_price is None else given_price
     assert price != None, "Pool not initialized"
 
     tickFloor = priceX96ToTickFloor(price, pool.ts)

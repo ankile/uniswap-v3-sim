@@ -1,4 +1,5 @@
 from .swap_math import *
+from ipdb import set_trace as bp
 
 
 def parseEntry(calldata, field, default=False, required=True):
@@ -24,8 +25,9 @@ def parseCalldata(calldata):
     swapIn = parseEntry(calldata, "swapIn")
     findMax = parseEntry(calldata, "findMax", required=False)
     fees = parseEntry(calldata, "fees", required=False)
+    given_price = parseEntry(calldata, "givenPrice", required=False, default=None)
 
-    return (as_of, tokenIn, swapIn, findMax, fees)
+    return (as_of, tokenIn, swapIn, findMax, fees, given_price)
 
 
 def inRangeTesting(zeroForOne, inRange0, inRangeToSwap0, inRange1, inRangeToSwap1):
@@ -50,7 +52,7 @@ def swapIn(calldata, pool, warn=True):
 
     amtIn, _ = swapIn(calldata, pool)
     """
-    (as_of, tokenIn, swapIn, findMax, fees) = parseCalldata(calldata)
+    (as_of, tokenIn, swapIn, findMax, fees, given_price) = parseCalldata(calldata)
 
     # there can be a desync between mints/burns and swap pulls
     # which causes incorrect data
@@ -66,8 +68,8 @@ def swapIn(calldata, pool, warn=True):
     # stops us from hitting annoying bugs
     assert swapIn != 0, "We do not support swaps of 0"
 
-    if as_of != pool.cache["as_of"]:
-        pool.calcSwapDF(as_of)
+    if as_of != pool.cache["as_of"] or given_price is not None:
+        pool.calcSwapDF(as_of, given_price=given_price)
 
     swap_df, inRangeValues = pool.cache["swapDF"], pool.cache["inRangeValues"]
 
